@@ -73,6 +73,6 @@ if __name__ == "__main__":
     axes[2].axis("off")
     plt.colorbar(im, ax=axes[2], fraction=0.046, pad=0.04)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.savefig("../outputs/confidence_map_sample.png", dpi=150)
     print("Saved confidence_map_sample.png")
