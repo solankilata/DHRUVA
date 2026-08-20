@@ -27,6 +27,7 @@ class UNet(nn.Module):
         self.pool = nn.MaxPool2d(2)
 
         self.bottleneck = DoubleConv(512, 1024)
+        self.dropout = nn.Dropout2d(p=0.3)  # 30% dropout, kept active at inference for MC Dropout
 
         self.up4 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
         self.dec4 = DoubleConv(1024, 512)
@@ -46,6 +47,7 @@ class UNet(nn.Module):
         e4 = self.enc4(self.pool(e3))
 
         b = self.bottleneck(self.pool(e4))
+        b = self.dropout(b)
 
         d4 = self.up4(b); d4 = self.dec4(torch.cat([d4, e4], dim=1))
         d3 = self.up3(d4); d3 = self.dec3(torch.cat([d3, e3], dim=1))
@@ -53,3 +55,9 @@ class UNet(nn.Module):
         d1 = self.up1(d2); d1 = self.dec1(torch.cat([d1, e1], dim=1))
 
         return self.out(d1)
+
+    def enable_mc_dropout(self):
+        """Keep dropout active even in eval mode — required for MC Dropout uncertainty estimation."""
+        for module in self.modules():
+            if isinstance(module, nn.Dropout2d):
+                module.train()
